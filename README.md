@@ -29,7 +29,7 @@ This library is used by a high performance tracing library [`minitrace-rust`](ht
 
 ## Platform Support
 
-Currently, only the Linux on `x86` or `x86_64` is backed by [TSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter). On other platforms, `minstant` falls back to coarse time. If TSC is unstable, it will also fall back to coarse time.
+Currently, only the Linux on `aarch64`, `x86` or `x86_64` is backed by [TSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter). On other platforms, `minstant` falls back to coarse time. If TSC is unstable, it will also fall back to coarse time.
 
 ## Benchmark
 
