@@ -1,6 +1,6 @@
 [package]
 name = "minstant"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["The TiKV Authors"]
 edition = "2021"
 license = "MIT"
@@ -10,6 +10,7 @@ repository = "https://github.com/tikv/minstant"
 documentation = "https://docs.rs/minstant"
 readme = "README.md"
 keywords = ["TSC", "clock", "rdtsc", "timing", "nanosecond"]
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]

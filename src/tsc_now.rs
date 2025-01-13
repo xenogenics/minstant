@@ -2,8 +2,8 @@
 
 //! This module will be compiled when it's either linux_aarch64, linux_x86 or linux_x86_64.
 
-use std::time::Instant;
 use std::cell::UnsafeCell;
+use std::time::Instant;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use std::fs::read_to_string;
@@ -50,18 +50,13 @@ pub(crate) fn nanos_per_cycle() -> f64 {
 #[inline]
 pub(crate) fn current_cycle() -> u64 {
     match unsafe { &*TSC_STATE.tsc_level.get() } {
-        TSCLevel::Stable {
-            cycles_from_anchor, ..
-        } => tsc().wrapping_sub(*cycles_from_anchor),
+        TSCLevel::Stable(..) => tsc(),
         TSCLevel::Unstable => panic!("tsc is unstable"),
     }
 }
 
 enum TSCLevel {
-    Stable {
-        cycles_per_second: u64,
-        cycles_from_anchor: u64,
-    },
+    Stable(u64),
     Unstable,
 }
 
@@ -71,20 +66,14 @@ impl TSCLevel {
             return TSCLevel::Unstable;
         }
 
-        let anchor = Instant::now();
-        let (cps, cfa) = cycles_per_sec(anchor);
-        TSCLevel::Stable {
-            cycles_per_second: cps,
-            cycles_from_anchor: cfa,
-        }
+        let (cps, ..) = cycles_per_sec();
+        TSCLevel::Stable(cps)
     }
 
     #[inline]
     fn cycles_per_second(&self) -> u64 {
         match self {
-            TSCLevel::Stable {
-                cycles_per_second, ..
-            } => *cycles_per_second,
+            TSCLevel::Stable(cps) => *cps,
             TSCLevel::Unstable => panic!("tsc is unstable"),
         }
     }
@@ -105,22 +94,8 @@ fn is_tsc_stable() -> bool {
     clock_source.map(|s| s.contains("tsc")).unwrap_or(false)
 }
 
-/// Returns (1) cycles per second and (2) cycles from anchor.
-/// The result of subtracting `cycles_from_anchor` from newly fetched TSC
-/// can be used to
-///   1. readjust TSC to begin from zero
-///   2. sync TSCs between all CPUs
-fn cycles_per_sec(anchor: Instant) -> (u64, u64) {
-    let (cps, last_monotonic, last_tsc) = _cycles_per_sec();
-    let nanos_from_anchor = (last_monotonic - anchor).as_nanos();
-    let cycles_flied = cps as f64 * nanos_from_anchor as f64 / 1_000_000_000.0;
-    let cycles_from_anchor = last_tsc - cycles_flied.ceil() as u64;
-
-    (cps, cycles_from_anchor)
-}
-
 /// Returns (1) cycles per second, (2) last monotonic time and (3) associated tsc.
-fn _cycles_per_sec() -> (u64, Instant, u64) {
+fn cycles_per_sec() -> (u64, Instant, u64) {
     let mut cycles_per_sec;
     let mut last_monotonic;
     let mut last_tsc;
